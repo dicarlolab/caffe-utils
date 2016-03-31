@@ -1,0 +1,6 @@
+*.swp
+log_*.txt
+*script_test_tmp.sh
+*.out
+*.pyc
+*.png
