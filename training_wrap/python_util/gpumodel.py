@@ -34,6 +34,7 @@ import pymongo as pm
 import gridfs
 import hashlib
 from yamutils.mongo import SONify
+import pdb
 
 
 def get_checkpoint_fs(host, port, db_name, fs_name):
@@ -234,8 +235,8 @@ class IGPUModel:
         for var, val in self.model_state.iteritems():
             setattr(self, var, val)
             
-        self.import_model()
-        self.init_model_lib()
+        #self.import_model()
+        #self.init_model_lib()
 
     def import_model(self):
         print "========================="
@@ -337,6 +338,7 @@ class IGPUModel:
         nbatch = dp.get_next_batch()
         t1 = time()
         print('call next batch', t1 - t0)
+        pdb.set_trace()
         res = self.parse_batch_data(nbatch, train=train)
         t2 = time()
         print('IGPUmodel parse batch', t2 - t1)

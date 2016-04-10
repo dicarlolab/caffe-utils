@@ -126,3 +126,4 @@ if __name__ == "__main__":
         dp_params[v] = op.get_value(v)
 
     dp_model    = IGPUModel("ConvNet", op, load_dic, filename_options, dp_params=dp_params)
+    test_data   = dp_model.get_next_batch()
