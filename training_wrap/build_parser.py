@@ -4,6 +4,7 @@ from python_util.options import *
 from python_util.gpumodel import *
 from optparse import OptionParser
 import sys
+import pdb
 
 from convdata import (ImageDataProvider, CIFARDataProvider, DummyConvNetLogRegDataProvider, 
                       CroppedGeneralDataProvider, CroppedGeneralDataRandomProvider, 
@@ -14,21 +15,6 @@ def build_parser():
     Function for parsing arguments
     Parser borrowed from archconvnet
     """
-
-    '''
-    parser = argparse.ArgumentParser(description='Train the networks using caffe')
-    parser.add_argument(
-        "--model_def",
-        default='/om/user/chengxuz/sparse_CNN/alex_mine/train_val.prototxt_lmdb',
-        help="Model definition file.")
-    parser.add_argument(
-        "--data_path",
-        default='/om/user/yamins/.skdata/imagenet/ChallengeSynsets2013_offline_23d6ee636ade8ad3912204410d1acc23c10357cf/cache/images_cache_e86d39462641ebc8870926aa16629eae5ca11c78_random_0_hdf5', 
-        help="Training data path")
-    parser.add_argument("--imageSize", default=256, help="Image size")
-    parser.add_argument("--imageChannel", default=3, help="Image channel")
-    parser.add_argument("", default=, help="")
-    '''
 
     op = OptionsParser()
     op.add_option("load-file", "load_file", StringOptionParser, "Load file", default="", excuses=OptionsParser.EXCUSE_ALL)
@@ -127,3 +113,4 @@ if __name__ == "__main__":
 
     dp_model    = IGPUModel("ConvNet", op, load_dic, filename_options, dp_params=dp_params)
     test_data   = dp_model.get_next_batch()
+    pdb.set_trace()
