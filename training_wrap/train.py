@@ -2,7 +2,8 @@ import numpy as np
 import h5py
 import cPickle
 import caffe
-caffe_root = "/om/user/hyo/usr7/pkgs/caffe/"
+#caffe_root = "/om/user/hyo/usr7/pkgs/caffe/"
+caffe_root = "/om/user/chengxuz/caffe_install/caffe/"
 import sys
 sys.path.insert(0, caffe_root + 'python')
 from optparse import OptionParser
@@ -11,6 +12,7 @@ from data import DataProvider
 import time
 import os
 import subprocess
+import pdb
 
 caffe.set_mode_gpu()
 caffe.set_device(0)
@@ -54,6 +56,7 @@ def main(parser):
             print "Resuming training from " + snapshot_prefix + '_iter_' + str(iter_snapshot) + '.caffemodel'
             N = caffe.Net(net, snapshot_prefix + '_iter_' +  str(iter_snapshot) + '.caffemodel', caffe.TRAIN)
 
+    print('Now loading finished!')
     # Save the net if training gets stopped
     import signal
     def sigint_handler(signal, frame):
@@ -63,18 +66,25 @@ def main(parser):
         sys.exit(0)
     signal.signal(signal.SIGINT, sigint_handler)
 
+
+    print('Now Training started!')
     # Start training
     loss = { key: 0 for key in N.outputs }
     prevs = {}
     for iter in range(iter_snapshot, max_iter):
         # clear param diffs
-        for layer_name, lay in zip(N._layer_names, N.layers):
-            for blobind, blob in enumerate(lay.blobs):
-                blob.diff[:] = 0
+        print('Trainging started:' + str(iter))
+        if not iter==0:
+            for layer_name, lay in zip(N._layer_names, N.layers):
+                #print(layer_name, lay)
+                for blobind, blob in enumerate(lay.blobs):
+                    blob.diff[:] = 0
+        #print('Clear param finished!')
         # clear loss  
         for k in loss.keys():
-	    loss[k] = 0
+            loss[k] = 0
        
+        print('Clear finished!')
         # update weights at every <iter_size> iterations 
         for i in range(iter_size):
 	    # load data batch
@@ -113,27 +123,31 @@ def main(parser):
 
         # update filter parameters
 #        t0 = time.time()
+        print('Blob diff related!')
         for layer_name, lay in zip(N._layer_names, N.layers):
+            print(layer_name, lay)
+            pdb.set_trace()
             for blobind, blob in enumerate(lay.blobs):
+                print(blobind, blob)
                 diff = blob.diff[:]
                 key = (layer_name, blobind)
                 if key in prevs:
                     previous_change = prevs[key]
                 else:
                     previous_change = 0
-
-		lr = learning_rate
-		wd = weight_decay
-		if blobind == 1:
-		    lr = 2 *lr
-		    wd = 0
-		if lay.type == "BatchNorm":
-		    lr = 0
-		    wd = 0
-		change = momentum * previous_change - lr * diff / iter_size - lr * wd * blob.data[:]
+                #print('Blob diff related finished!')
+                lr = learning_rate
+                wd = weight_decay
+                if blobind == 1:
+                    lr = 2 *lr
+                    wd = 0
+                if lay.type == "BatchNorm":
+                    lr = 0
+                    wd = 0
+                change = momentum * previous_change - lr * diff / iter_size - lr * wd * blob.data[:]
 
                 blob.data[:] += change
-		prevs[key] = change
+                prevs[key] = change
 #        update_time = time.time() - t0
 #        print "loading: {0:.2f}, forward: {1:.2f}, backward: {2:.2f}, update: {3:.2f}".format(load_time, forward_time, backward_time, update_time)
         
