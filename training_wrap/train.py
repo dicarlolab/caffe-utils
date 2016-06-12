@@ -73,18 +73,18 @@ def main(parser):
     prevs = {}
     for iter in range(iter_snapshot, max_iter):
         # clear param diffs
-        print('Trainging started:' + str(iter))
-        if not iter==0:
-            for layer_name, lay in zip(N._layer_names, N.layers):
-                #print(layer_name, lay)
-                for blobind, blob in enumerate(lay.blobs):
-                    blob.diff[:] = 0
+        #print('Trainging started:' + str(iter))
+        #if not iter==0:
+        for layer_name, lay in zip(N._layer_names, N.layers):
+            #print(layer_name, lay)
+            for blobind, blob in enumerate(lay.blobs):
+                blob.diff[:] = 0
         #print('Clear param finished!')
         # clear loss  
         for k in loss.keys():
             loss[k] = 0
        
-        print('Clear finished!')
+        #print('Clear finished!')
         # update weights at every <iter_size> iterations 
         for i in range(iter_size):
 	    # load data batch
@@ -99,13 +99,13 @@ def main(parser):
                 N.blobs[label_key].data[...] = _labels[label_key].reshape(N.blobs[label_key].data.shape)
 
 	    # Forward
-#            t0 = time.time()
+            t0 = time.time()
             out = N.forward()
-#            forward_time = time.time()
+            forward_time = time.time()
 	    # Backward
             N.backward()
-#            backward_time = time.time() - forward_time
-#            forward_time -= t0
+            backward_time = time.time() - forward_time
+            forward_time -= t0
 
             for k in out.keys():
                 loss[k] += np.copy(out[k])
@@ -122,13 +122,13 @@ def main(parser):
         sys.stdout.flush()
 
         # update filter parameters
-#        t0 = time.time()
-        print('Blob diff related!')
+        t0 = time.time()
+        #print('Blob diff related!')
         for layer_name, lay in zip(N._layer_names, N.layers):
-            print(layer_name, lay)
-            pdb.set_trace()
+            #print(layer_name, lay)
+            #pdb.set_trace()
             for blobind, blob in enumerate(lay.blobs):
-                print(blobind, blob)
+                #print(blobind, blob)
                 diff = blob.diff[:]
                 key = (layer_name, blobind)
                 if key in prevs:
@@ -148,8 +148,8 @@ def main(parser):
 
                 blob.data[:] += change
                 prevs[key] = change
-#        update_time = time.time() - t0
-#        print "loading: {0:.2f}, forward: {1:.2f}, backward: {2:.2f}, update: {3:.2f}".format(load_time, forward_time, backward_time, update_time)
+        update_time = time.time() - t0
+        print "loading: {0:.2f}, forward: {1:.2f}, backward: {2:.2f}, update: {3:.2f}".format(load_time, forward_time, backward_time, update_time)
         
         # save weights 
         if iter % snapshot == 0:
