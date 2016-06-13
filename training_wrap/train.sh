@@ -15,4 +15,4 @@ momentum=0.9
 weight_decay=0.0005
 snapshot=10000
 
-python train.py --net ${net} --display ${display} --base_lr ${base_lr} --lr_policy ${lr_policy} --gamma ${gamma} --stepsize ${stepsize} --max_iter ${max_iter} --momentum ${momentum}  --weight_decay ${weight_decay} --snapshot ${snapshot} --snapshot_prefix ${snapshot_prefix} --dp-params ${dp_params} --preproc ${preproc}
+python train.py --net ${net} --display ${display} --base_lr ${base_lr} --lr_policy ${lr_policy} --gamma ${gamma} --stepsize ${stepsize} --max_iter ${max_iter} --momentum ${momentum}  --weight_decay ${weight_decay} --snapshot ${snapshot} --snapshot_prefix ${snapshot_prefix} --dp-params ${dp_params} --preproc ${preproc} --multi_core 4
