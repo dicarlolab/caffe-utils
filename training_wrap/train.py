@@ -27,18 +27,22 @@ loss        = ''
 prevs       = ''
 lock        = multiprocessing.Lock()
 data_time   = time.time()
+iter_now    = 0
 
 def train_iter(iter):
     global data_time
+    global N
+    global loss
+    global prevs
+    global lock
+    global iter_now
 
+    caffe.set_mode_gpu()
+    caffe.set_device(0)
+
+    #print('Start training!')
+    sys.stdout.flush()
     # clear param diffs
-    for layer_name, lay in zip(N._layer_names, N.layers):
-        #print(layer_name, lay)
-        for blobind, blob in enumerate(lay.blobs):
-            blob.diff[:] = 0
-    # clear loss  
-    for k in loss.keys():
-        loss[k] = 0
    
     #print('Clear finished!')
     # update weights at every <iter_size> iterations 
@@ -47,35 +51,65 @@ def train_iter(iter):
         ind = iter * dp.batch_size * dp.iter_size + i * dp.batch_size
         _data, _labels = dp.get_batch(ind)
 
+        #print('Try to acquire lock!')
+        #sys.stdout.flush()
         lock.acquire()
+        iter    = iter_now
+        #print('Acquire lock!')
+        #sys.stdout.flush()
+
+        for layer_name, lay in zip(N._layer_names, N.layers):
+            #print(layer_name, lay)
+            for blobind, blob in enumerate(lay.blobs):
+                blob.diff[:] = 0
+        # clear loss  
+        for k in loss.keys():
+            loss[k] = 0
+
+        #print('Diff cleared!')
+        #sys.stdout.flush()
+
         load_time = time.time() - data_time
 
     # set data as input
         N.blobs['data'].data[...] = _data
         for label_key in _labels.keys():
             N.blobs[label_key].data[...] = _labels[label_key].reshape(N.blobs[label_key].data.shape)
+        #print('Data copied!')
+        #sys.stdout.flush()
 
     # Forward
         t0 = time.time()
         out = N.forward()
         forward_time = time.time()
+
+        #print('Forward!')
+        #sys.stdout.flush()
     # Backward
         N.backward()
         backward_time = time.time() - forward_time
         forward_time -= t0
 
+        #print('Backward!')
+        #sys.stdout.flush()
+
         for k in out.keys():
             loss[k] += np.copy(out[k])
+
+    #print('Update begin!')
+    #sys.stdout.flush()
 
     # learning rate schedule
     if options.lr_policy == "step":
         learning_rate = options.learning_rate * (options.gamma**(iter/options.stepsize))
 
     # print output loss
-    print "Iteration", iter, "(lr: {0:.4f})".format( learning_rate )
+    if iter % options.report == 0:
+        print "Iteration", iter, "(lr: {0:.4f})".format( learning_rate )
     for k in np.sort(out.keys()):
         loss[k] /= dp.iter_size
-        print "Iteration", iter, ", ", k, "=", loss[k]
+        if iter % options.report == 0:
+            print "Iteration", iter, ", ", k, "=", loss[k]
     sys.stdout.flush()
 
     # update filter parameters
@@ -106,7 +140,8 @@ def train_iter(iter):
             blob.data[:] += change
             prevs[key] = change
     update_time = time.time() - t0
-    print "loading: {0:.2f}, forward: {1:.2f}, backward: {2:.2f}, update: {3:.2f}".format(load_time, forward_time, backward_time, update_time)
+    if iter % options.report == 0:
+        print "loading: {0:.2f}, forward: {1:.2f}, backward: {2:.2f}, update: {3:.2f}".format(load_time, forward_time, backward_time, update_time)
     
     # save weights 
     if iter % options.snapshot == 0:
@@ -124,6 +159,7 @@ def train_iter(iter):
 
     
     data_time = time.time()
+    iter_now  += 1
     lock.release()
 
 def main(parser):
@@ -185,7 +221,7 @@ def main(parser):
             print "Resuming training from " + options.snapshot_prefix + '_iter_' + str(options.iter_resume) + '.caffemodel'
             N = caffe.Net(options.net, options.snapshot_prefix + '_iter_' +  str(options.iter_resume) + '.caffemodel', caffe.TRAIN)
 
-    print('Now loading finished!')
+    #print('Now loading finished!')
     # Save the net if training gets stopped
     import signal
     def sigint_handler(signal, frame):
@@ -196,7 +232,7 @@ def main(parser):
     signal.signal(signal.SIGINT, sigint_handler)
 
 
-    print('Now Training started!')
+    #print('Now Training started!')
     # Start training
     loss = { key: 0 for key in N.outputs }
     prevs = {}
@@ -205,8 +241,14 @@ def main(parser):
         for iter in range(options.iter_resume, options.max_iter):
             train_iter(iter)
     else:
+        #print('Pool started!')
+        #sys.stdout.flush()
         pool = ThreadPool(options.multi_core)
+        #print('Pool created!')
+        #sys.stdout.flush()
         results = pool.map(train_iter, range(options.iter_resume, options.max_iter))
+        #print('Pool mapped!')
+        #sys.stdout.flush()
         pool.close()
         pool.join()
 
@@ -231,5 +273,7 @@ if __name__ == "__main__":
     parser.add_option("-f", "--weights", dest="weights", default=None)
     parser.add_option("--dp-params", dest="dp_params", default='', help="Data provider params")
     parser.add_option("--preproc", dest="preproc", default='', help="Data preprocessing params")
+    parser.add_option("--report", dest="report", default=10,type=int, help="Report interval")
+
 
     main(parser)

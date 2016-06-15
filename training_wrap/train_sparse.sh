@@ -1,7 +1,8 @@
 #!/bin/bash
 
-net="/om/user/chengxuz/caffe-utils/training_wrap/train_val_alexnet.prototxt"
-snapshot_prefix="/om/user/chengxuz/caffe_install/snapshot/alexnet"
+net="/om/user/chengxuz/matlab_codes/cnn_study/caffe_net_train/openmind_nets/train_val_sparsity${1}.prototxt"
+snapshot_prefix="/om/user/chengxuz/caffe_install/snapshot/alexnet_sp_${1}/"
+mkdir -p ${snapshot_prefix}
 
 dp_params="{'data_path':'/om/user/yamins/.skdata/imagenet/ChallengeSynsets2013_offline_23d6ee636ade8ad3912204410d1acc23c10357cf/cache/images_cache_e86d39462641ebc8870926aa16629eae5ca11c78_random_0_hdf5/data.raw','data_key':'data','label_path':'/om/user/chengxuz/my_meta_data/labels_for_images_cache_e86d39462641ebc8870926aa16629eae5ca11c78_random_0_hdf5/labels.hdf5','label_key':['labels'],'cache_type':'hdf5','batch_size':256,'val_len':50000}"
 preproc="{'data_mean':'/om/user/hyo/caffe/imagenet_mean.npy','crop_size':227,'do_img_flip':True,'noise_level':10}"
