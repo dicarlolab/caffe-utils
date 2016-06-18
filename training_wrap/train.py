@@ -41,7 +41,7 @@ def train_iter(iter):
     caffe.set_device(0)
 
     #print('Start training!')
-    sys.stdout.flush()
+    #sys.stdout.flush()
     # clear param diffs
    
     #print('Clear finished!')
@@ -144,7 +144,7 @@ def train_iter(iter):
         print "loading: {0:.2f}, forward: {1:.2f}, backward: {2:.2f}, update: {3:.2f}".format(load_time, forward_time, backward_time, update_time)
     
     # save weights 
-    if iter % options.snapshot == 0:
+    if iter % options.snapshot == 0 or iter in options.save_iter:
         print 'Snapshotting for iteration ' + str(iter)
         N.save(options.snapshot_prefix + '_iter_' +  str(iter) + '.caffemodel')
 
@@ -154,8 +154,12 @@ def train_iter(iter):
         weights_test = options.snapshot_prefix + '_iter_' +  str(iter) + '.caffemodel'
         if not os.path.exists(weights_test):
             N.save(options.snapshot_prefix + '_iter_' +  str(iter) + '.caffemodel')
-        command_for_test = options.command_for_test + ' test.sh ' + options.net + ' ' + weights_test + ' "' + options.dp_params + '" "' + options.preproc + '"'
-        subprocess.call(command_for_test, shell=True)
+        if iter>0:
+            if not (iter - options.test_interval) in options.save_iter:
+                delete_file     = options.snapshot_prefix + '_iter_' +  str(iter - options.test_interval) + '.caffemodel'
+                os.system('rm ' + delete_file)
+        #command_for_test = options.command_for_test + ' test.sh ' + options.net + ' ' + weights_test + ' "' + options.dp_params + '" "' + options.preproc + '"'
+        #subprocess.call(command_for_test, shell=True)
 
     
     data_time = time.time()
@@ -169,8 +173,14 @@ def main(parser):
     global dp
     global loss
     global prevs
+    global iter_now
 
     (options, args) = parser.parse_args()
+
+    if not options.save_iter=="None":
+        options.save_iter   = options.save_iter.split(',')
+        for indx_iter in xrange(len(options.save_iter)):
+            options.save_iter[indx_iter]    = int(options.save_iter[indx_iter])
     '''
     net = options.net
     display = options.display
@@ -210,6 +220,25 @@ def main(parser):
         iter_size   = 1
     '''
 
+
+    if not options.find==0:
+
+        search_dir  = options.snapshot_prefix
+        files = os.listdir(search_dir)
+        files = [os.path.join(search_dir, f) for f in files]
+        files = filter(os.path.isfile, files)
+
+        if len(files)>0:
+            files.sort(key=lambda x: os.path.getmtime(x))
+            file_name   = files[-1]
+            split_tmp   = file_name.split('/')
+            split_tmp   = split_tmp[-1].split('.')
+            split_tmp   = split_tmp[0].split('_')
+            iter_now    = int(split_tmp[-1])
+            #options.weights     = files[-1]
+            #options.iter_resume     = (len(files) - 1)*options.test_interval
+            options.iter_resume     = iter_now
+    
     # Load the net
     if options.weights is not None:
         print "Loading weights from " + options.weights
@@ -241,6 +270,7 @@ def main(parser):
         for iter in range(options.iter_resume, options.max_iter):
             train_iter(iter)
     else:
+        iter_now    = options.iter_resume +1
         #print('Pool started!')
         #sys.stdout.flush()
         pool = ThreadPool(options.multi_core)
@@ -274,6 +304,7 @@ if __name__ == "__main__":
     parser.add_option("--dp-params", dest="dp_params", default='', help="Data provider params")
     parser.add_option("--preproc", dest="preproc", default='', help="Data preprocessing params")
     parser.add_option("--report", dest="report", default=10,type=int, help="Report interval")
-
+    parser.add_option("--find", dest="find", default=0,type=int, help="Find the newest snapshot, prefix should be folder")
+    parser.add_option("--save_iter", dest="save_iter", default="0,1000,2000,4000,6000,10000,15000,20000,30000,40000,50000,70000,100000,140000,200000,300000,400000,450000", help="The iteration to save the snapshot, None for not using, otherwise snapshot would be ignored, split by ','")
 
     main(parser)
