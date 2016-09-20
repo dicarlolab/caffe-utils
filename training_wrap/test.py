@@ -2,7 +2,8 @@ import numpy as np
 import h5py
 import cPickle
 import caffe
-caffe_root = "/om/user/hyo/usr7/pkgs/caffe/"
+#caffe_root = "/om/user/hyo/usr7/pkgs/caffe/"
+caffe_root = "/om/user/chengxuz/caffe_install/caffe/"
 import sys
 sys.path.insert(0, caffe_root + 'python')
 from optparse import OptionParser
@@ -10,7 +11,7 @@ import ast
 from data import DataProvider
 import os
 import cPickle
-from lockfile import LockFile
+#from lockfile import LockFile
 
 caffe.set_mode_gpu()
 caffe.set_device(0)
@@ -27,7 +28,7 @@ def main(parser):
     # output filename
     filename = 'output_test/' + (weights.split('/')[-1]).split('_iter')[0] + '.p'
     iter_test = int(((weights.split('/')[-1]).split('_iter_')[1]).split('.')[0])
-    filename_temp = 'output_test/temp_' + (weights.split('/')[-1]).split('.')[0] + '.txt'
+    filename_temp = 'output_test/temp_' + (weights.split('/')[-2]) + (weights.split('/')[-1]).split('.')[0] + '.txt'
     f = open(filename_temp, 'w')
 
     # Data provider
@@ -81,8 +82,8 @@ def main(parser):
     f.close()
 
     # Save to test output file
-    lock = LockFile(filename)
-    lock.acquire()
+    #lock = LockFile(filename)
+    #lock.acquire()
     if os.path.exists(filename):
         r = cPickle.load(open(filename))
     else:
@@ -97,10 +98,10 @@ def main(parser):
             r['iter_test'][k] = np.sort(r['iter_test'][k])
     with open(filename, 'w') as f:
         cPickle.dump(r, f)
-    lock.release()
+    #lock.release()
 
     # remove temp file
-    os.remove(filename_temp)
+    #os.remove(filename_temp)
 
 if __name__ == "__main__":
     parser = OptionParser()

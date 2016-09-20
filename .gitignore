@@ -5,3 +5,4 @@ log_*.txt
 *.out
 *.pyc
 *.png
+*/output_test/
