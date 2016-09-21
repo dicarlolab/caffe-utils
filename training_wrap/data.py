@@ -100,9 +100,12 @@ class DataProvider:
         #    print "crop: {0:.2f}, flip: {1:.2f}, noise: {2:.2f}".format(t1-t0, t2-t1, t3-t2)
         return _data_cropped, _labels
 
-    def get_batch_test(self, ind):
+    def get_batch_test(self, ind, perm_flag = True):
         _labels = {}
-        perm = np.random.RandomState().permutation(self.batch_size)
+        if perm_flag:
+            perm = np.random.RandomState().permutation(self.batch_size)
+        else:
+            perm = range(self.batch_size)
         # load data batch
         start = ind % self.val_len + self.train_len
         end = (ind + self.batch_size) % self.val_len + self.train_len

@@ -53,15 +53,24 @@ def main(parser):
     # Start training
     loss = { key: 0 for key in N.outputs }
     prevs = {}
+
+    if not options.save_file==None:
+        all_data_dict   = {}
+        #names           = ['conv4']
+        names 	= ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8'] # for sparsity network
+        img_num         = 5760
+        
     for iter in range(max_iter):
 	# load data batch
         ind = iter * bsize
-        _data, _labels = dp.get_batch_test(ind)
+        _data, _labels = dp.get_batch_test(ind, perm_flag=(options.perm_flag==1))
 
 	# set data as input
-        N.blobs['data'].data[...] = _data
+        #N.blobs['data'].data[...] = _data
+        N.blobs['data'].data[:bsize] = _data
         for label_key in _labels.keys():
-            N.blobs[label_key].data[...] = _labels[label_key].reshape(N.blobs[label_key].data.shape)
+            #N.blobs[label_key].data[...] = _labels[label_key].reshape(N.blobs[label_key].data.shape)
+            N.blobs[label_key].data[:bsize] = _labels[label_key].reshape(N.blobs[label_key].data[:bsize].shape)
 
 	# Forward
         out = N.forward()
@@ -75,6 +84,19 @@ def main(parser):
         for k in np.sort(out.keys()):
             print >> f, "Batch #", iter, ", ", k, "=", out[k]
         sys.stdout.flush()
+
+        if not options.save_file==None:
+            for layer_name in names:
+                now_data_tmp    = N.blobs[layer_name].data[:bsize]
+                now_data_shape  = now_data_tmp.size/bsize
+
+                #print(layer_name)
+                #print(now_data_shape)
+                #print(net.blobs[layer_name].data.shape)
+
+                if layer_name not in all_data_dict:
+                    all_data_dict[layer_name]   = np.zeros([img_num, now_data_shape])
+                all_data_dict[layer_name][iter*bsize:(iter+1)*bsize]       = now_data_tmp.reshape([bsize, now_data_shape])
 
     # print output loss to temp file
     for k in np.sort(loss.keys()):
@@ -100,6 +122,14 @@ def main(parser):
         cPickle.dump(r, f)
     #lock.release()
 
+    if not options.save_file==None:
+        file_indx_now   = 0
+        for layer_name in all_data_dict:
+            f = h5py.File(options.save_file + 'output_' + str(file_indx_now) + '.hdf5', "w")
+            f.create_dataset(layer_name, data = all_data_dict[layer_name])
+            f.close()
+            file_indx_now   = file_indx_now + 1
+
     # remove temp file
     #os.remove(filename_temp)
 
@@ -109,6 +139,8 @@ if __name__ == "__main__":
     parser.add_option("-f", "--weights", dest="weights", default=None)
     parser.add_option("--dp-params", dest="dp_params", default='', help="Data provider params")
     parser.add_option("--preproc", dest="preproc", default='', help="Data preprocessing params")
+    parser.add_option("--perm-flag", dest="perm_flag", default=1, help="The flag for whether permutating the test data", type=int)
+    parser.add_option("--save-file", dest="save_file", default=None, help="The flag for whether saving the responses")
     parser.add_option("--max-iter", dest="max_iter", default=None, type=int)
 
     main(parser)
