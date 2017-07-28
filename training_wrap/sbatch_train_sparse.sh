@@ -34,9 +34,9 @@ sp=0.02
 #for sp in 2 10
 for sp in 0
 do
-    #for k in 1 2 3 4
+    for k in 1 2 3 4
     #for k in 1
-    for k in 2 3 4
+    #for k in 2 3 4
     do
         #sbatch --time=6-0:0:0 --qos="use-everything" --exclude=node027 -J ca${sp} -o /om/user/chengxuz/slurm_out_all/slurm_caffe_${sp}_${k}_%j.out --gres=gpu:1 --mem 35000 -c 5 ./train_sparse.sh ${sp} ${k}
 
@@ -45,6 +45,6 @@ do
         #sbatch --time=6-0:0:0 -J ca${sp} -o /om/user/chengxuz/slurm_out_all/slurm_caffe_${sp}_${k}_%j.out --gres=gpu:titan-x:1 --mem 35000 -c 5 ./train_sparse.sh ${sp} ${k}
         #sbatch --time=6-0:0:0 -J ca${sp} -o /om/user/chengxuz/slurm_out_all/slurm_caffe_${sp}_${k}_%j.out --gres=gpu:1 --mem 35000 -c 5 ./train_sparse.sh ${sp} ${k}
         #sbatch --time=6-0:0:0 -J ca${sp} -o /om/user/chengxuz/slurm_out_all/slurm_caffe_${sp}_${k}_%j.out --gres=gpu:1 --mem 35000 -c 5 ./train_sparse.sh ${k}
-        sbatch --time=6-0:0:0 -J ca${sp} -o /om/user/chengxuz/slurm_out_all/slurm_caffe_${sp}_${k}_%j.out --gres=gpu:1 --mem 35000 -c 5 ./train_sigmoid.sh ${k}
+        sbatch --time=6-0:0:0 -J ca_f${sp} -o /om/user/chengxuz/slurm_out_all/slurm_caffe_${sp}_${k}_%j.out --gres=gpu:titan-x:1 --mem 35000 -c 5 ./train_sigmoid.sh ${k}
     done
 done

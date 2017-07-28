@@ -7,8 +7,10 @@ export LD_LIBRARY_PATH=/om/user/chengxuz/library/cuda/cudnn_5/cuda/lib64:$LD_LIB
 
 #net="/om/user/chengxuz/matlab_codes/cnn_study/caffe_net_train/openmind_nets/train_val_sparsity${1}.prototxt"
 #snapshot_prefix="/om/user/chengxuz/caffe_install/snapshot/alexnet_sp_${1}_${2}/"
-net="/om/user/chengxuz/matlab_codes/cnn_study/caffe_net_train/openmind_nets/train_val_sigmoid.prototxt"
-snapshot_prefix="/om/user/chengxuz/caffe_install/snapshot/alexnet_sigmoid_${1}/"
+#net="/om/user/chengxuz/matlab_codes/cnn_study/caffe_net_train/openmind_nets/train_val_sigmoid.prototxt"
+net="/om/user/chengxuz/matlab_codes/cnn_study/caffe_net_train/openmind_nets/train_val_sigmoid_false.prototxt"
+#snapshot_prefix="/om/user/chengxuz/caffe_install/snapshot/alexnet_sigmoid_${1}/"
+snapshot_prefix="/om/user/chengxuz/caffe_install/snapshot/alexnet_sigmoid_false${1}/"
 mkdir -p ${snapshot_prefix}
 
 #dp_params="{'data_path':'/om/user/yamins/.skdata/imagenet/ChallengeSynsets2013_offline_23d6ee636ade8ad3912204410d1acc23c10357cf/cache/images_cache_e86d39462641ebc8870926aa16629eae5ca11c78_random_0_hdf5/data.raw','data_key':'data','label_path':'/om/user/chengxuz/my_meta_data/labels_for_images_cache_e86d39462641ebc8870926aa16629eae5ca11c78_random_0_hdf5/labels.hdf5','label_key':['labels'],'cache_type':'hdf5','batch_size':256,'val_len':50000}"
@@ -19,8 +21,8 @@ lr_policy="step"
 gamma=0.1
 stepsize=100000
 display=20
-#max_iter=450000
-max_iter=200000
+max_iter=450000
+#max_iter=200000
 #max_iter=45
 momentum=0.9
 weight_decay=0.0005
